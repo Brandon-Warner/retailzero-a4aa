@@ -1,0 +1,32 @@
+[
+  {
+    "id": "user-1",
+    "email": "jane@example.com",
+    "name": "Jane Smith",
+    "address": {
+      "street": "123 Main St",
+      "city": "Springfield",
+      "state": "IL",
+      "zip": "62701"
+    },
+    "preferences": {
+      "newsletter": true,
+      "theme": "light"
+    }
+  },
+  {
+    "id": "user-2",
+    "email": "john@example.com",
+    "name": "John Doe",
+    "address": {
+      "street": "456 Oak Ave",
+      "city": "Portland",
+      "state": "OR",
+      "zip": "97201"
+    },
+    "preferences": {
+      "newsletter": false,
+      "theme": "dark"
+    }
+  }
+]

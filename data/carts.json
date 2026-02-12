@@ -1,0 +1,34 @@
+{
+  "user-1": {
+    "items": [],
+    "updatedAt": "2024-01-01T00:00:00Z"
+  },
+  "user-2": {
+    "items": [],
+    "updatedAt": "2024-01-01T00:00:00Z"
+  },
+  "guest": {
+    "items": [],
+    "updatedAt": "2024-01-01T00:00:00Z"
+  },
+  "auth0|69880b233f79700324839b50": {
+    "items": [
+      {
+        "productId": "prod-3",
+        "quantity": 1,
+        "addedAt": "2026-02-08T09:57:44.945Z"
+      }
+    ],
+    "updatedAt": "2026-02-08T09:57:44.945Z"
+  },
+  "auth0|6988639a3f79700324839b6e": {
+    "items": [
+      {
+        "productId": "prod-4",
+        "quantity": 1,
+        "addedAt": "2026-02-08T10:22:59.497Z"
+      }
+    ],
+    "updatedAt": "2026-02-08T10:22:59.497Z"
+  }
+}

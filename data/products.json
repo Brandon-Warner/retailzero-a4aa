@@ -1,0 +1,162 @@
+[
+  {
+    "id": "prod-1",
+    "name": "Wireless Headphones",
+    "description": "Premium over-ear wireless headphones with active noise cancellation and 30-hour battery life.",
+    "price": 79.99,
+    "image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop",
+    "category": "Electronics",
+    "stock": 45,
+    "rating": 4
+  },
+  {
+    "id": "prod-2",
+    "name": "Cotton T-Shirt",
+    "description": "Soft 100% organic cotton crew neck t-shirt. Available in multiple colors.",
+    "price": 24.99,
+    "image": "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop",
+    "category": "Clothing",
+    "stock": 120,
+    "rating": 4
+  },
+  {
+    "id": "prod-3",
+    "name": "Smart Watch",
+    "description": "Feature-packed smartwatch with heart rate monitoring, GPS, and 5-day battery life.",
+    "price": 199.99,
+    "image": "https://images.unsplash.com/photo-1579586337278-3befd40fd17a?w=400&h=400&fit=crop",
+    "category": "Electronics",
+    "stock": 30,
+    "rating": 5
+  },
+  {
+    "id": "prod-4",
+    "name": "Yoga Mat",
+    "description": "Extra-thick non-slip yoga mat with carrying strap. Eco-friendly TPE material.",
+    "price": 34.99,
+    "image": "https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=400&h=400&fit=crop",
+    "category": "Sports",
+    "stock": 75,
+    "rating": 4
+  },
+  {
+    "id": "prod-5",
+    "name": "Coffee Maker",
+    "description": "12-cup programmable drip coffee maker with thermal carafe and auto shut-off.",
+    "price": 89.99,
+    "image": "https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?w=400&h=400&fit=crop",
+    "category": "Home",
+    "stock": 20,
+    "rating": 4
+  },
+  {
+    "id": "prod-6",
+    "name": "Running Shoes",
+    "description": "Lightweight breathable running shoes with responsive cushioning and durable outsole.",
+    "price": 129.99,
+    "image": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop",
+    "category": "Sports",
+    "stock": 55,
+    "rating": 5
+  },
+  {
+    "id": "prod-7",
+    "name": "Desk Lamp",
+    "description": "Adjustable LED desk lamp with multiple brightness levels and color temperatures.",
+    "price": 45.99,
+    "image": "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=400&h=400&fit=crop",
+    "category": "Home",
+    "stock": 40,
+    "rating": 3
+  },
+  {
+    "id": "prod-8",
+    "name": "Denim Jacket",
+    "description": "Classic denim jacket with button closure and chest pockets. Timeless style.",
+    "price": 89.99,
+    "image": "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=400&h=400&fit=crop",
+    "category": "Clothing",
+    "stock": 35,
+    "rating": 4
+  },
+  {
+    "id": "prod-9",
+    "name": "Travel Backpack",
+    "description": "Durable 40L travel backpack with padded laptop compartment, multiple pockets, and water-resistant fabric.",
+    "price": 64.99,
+    "image": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=400&fit=crop",
+    "category": "Sports",
+    "stock": 60,
+    "rating": 4
+  },
+  {
+    "id": "prod-10",
+    "name": "Portable Bluetooth Speaker",
+    "description": "Compact waterproof Bluetooth speaker with 360-degree sound and 12-hour battery life.",
+    "price": 49.99,
+    "image": "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400&h=400&fit=crop",
+    "category": "Electronics",
+    "stock": 85,
+    "rating": 4
+  },
+  {
+    "id": "prod-11",
+    "name": "Polarized Sunglasses",
+    "description": "UV400 polarized sunglasses with lightweight metal frame and scratch-resistant lenses.",
+    "price": 39.99,
+    "image": "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400&h=400&fit=crop",
+    "category": "Clothing",
+    "stock": 90,
+    "rating": 5
+  },
+  {
+    "id": "prod-12",
+    "name": "Insulated Water Bottle",
+    "description": "Double-wall vacuum-insulated stainless steel bottle. Keeps drinks cold 24 hrs or hot 12 hrs.",
+    "price": 29.99,
+    "image": "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400&h=400&fit=crop",
+    "category": "Sports",
+    "stock": 110,
+    "rating": 5
+  },
+  {
+    "id": "prod-13",
+    "name": "Canvas Sneakers",
+    "description": "Classic low-top canvas sneakers with vulcanized rubber sole. Everyday comfort and style.",
+    "price": 54.99,
+    "image": "https://images.unsplash.com/photo-1463100099107-aa0980c362e6?w=400&h=400&fit=crop",
+    "category": "Clothing",
+    "stock": 70,
+    "rating": 4
+  },
+  {
+    "id": "prod-14",
+    "name": "Minimalist Wristwatch",
+    "description": "Sleek analog wristwatch with sapphire crystal glass, Japanese quartz movement, and leather strap.",
+    "price": 149.99,
+    "image": "https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=400&h=400&fit=crop",
+    "category": "Electronics",
+    "stock": 25,
+    "rating": 5
+  },
+  {
+    "id": "prod-15",
+    "name": "Decorative Throw Pillow",
+    "description": "Soft textured throw pillow with removable cover. Adds a cozy accent to any room.",
+    "price": 22.99,
+    "image": "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?w=400&h=400&fit=crop",
+    "category": "Home",
+    "stock": 95,
+    "rating": 4
+  },
+  {
+    "id": "prod-16",
+    "name": "Stainless Steel Tumbler",
+    "description": "30 oz insulated tumbler with spill-proof lid. Perfect for coffee, smoothies, and iced drinks.",
+    "price": 19.99,
+    "image": "https://images.unsplash.com/photo-1517701604599-bb29b565090c?w=400&h=400&fit=crop",
+    "category": "Home",
+    "stock": 140,
+    "rating": 4
+  }
+]
