@@ -44,6 +44,8 @@ export const tools: ToolDefinition[] = [
         category: p.category,
         stock: p.stock,
         rating: p.rating,
+        image: p.image,
+        description: p.description,
       }));
     },
   },

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from "react";
-import { MessageCircle, X, Send, Loader2 } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { UIMessage } from "ai";
 import { useChat } from "@ai-sdk/react";
 import { useInterruptions } from "@auth0/ai-vercel/react";
@@ -101,7 +101,15 @@ function classifyInterrupt(interrupt: any): InterruptType {
 // even when the model doesn't generate follow-up text.
 // ---------------------------------------------------------------------------
 
-function ToolResultDisplay({ toolName, output }: { toolName: string; output: any }) {
+function ToolResultDisplay({
+  toolName,
+  output,
+  onAddToCart
+}: {
+  toolName: string;
+  output: any;
+  onAddToCart?: (productId: string) => void;
+}) {
   if (!output || output.error) {
     return output?.error ? (
       <p className="text-xs text-red-500 mt-1">{output.error}</p>
@@ -135,22 +143,139 @@ function ToolResultDisplay({ toolName, output }: { toolName: string; output: any
 
   if (toolName === "show_products") {
     const products = output as {
+      id: string;
       name: string;
       price: number;
       category: string;
       rating: number;
+      stock?: number;
+      image?: string;
+      description?: string;
     }[];
     if (!products?.length) {
       return <p className="text-xs text-muted-foreground mt-1">No products found.</p>;
     }
+
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const [canScrollLeft, setCanScrollLeft] = useState(false);
+    const [canScrollRight, setCanScrollRight] = useState(true);
+
+    const checkScroll = () => {
+      const container = scrollContainerRef.current;
+      if (!container) return;
+
+      setCanScrollLeft(container.scrollLeft > 0);
+      setCanScrollRight(
+        container.scrollLeft < container.scrollWidth - container.clientWidth - 1
+      );
+    };
+
+    useEffect(() => {
+      checkScroll();
+      const container = scrollContainerRef.current;
+      if (container) {
+        container.addEventListener('scroll', checkScroll);
+        return () => container.removeEventListener('scroll', checkScroll);
+      }
+    }, []);
+
+    const scroll = (direction: 'left' | 'right') => {
+      const container = scrollContainerRef.current;
+      if (!container) return;
+
+      const scrollAmount = 200; // Scroll by ~1 card width
+      const newScrollLeft = direction === 'left'
+        ? container.scrollLeft - scrollAmount
+        : container.scrollLeft + scrollAmount;
+
+      container.scrollTo({
+        left: newScrollLeft,
+        behavior: 'smooth'
+      });
+    };
+
     return (
-      <div className="mt-1 text-xs space-y-1">
-        {products.map((p, i) => (
-          <div key={i} className="flex justify-between">
-            <span>{p.name} <span className="text-muted-foreground">({p.category})</span></span>
-            <span>${p.price.toFixed(2)}</span>
-          </div>
-        ))}
+      <div className="mt-2 -mx-1 relative group">
+        {/* Left Arrow */}
+        {canScrollLeft && (
+          <button
+            onClick={() => scroll('left')}
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 rounded-full bg-background/90 border shadow-md flex items-center justify-center hover:bg-background opacity-0 group-hover:opacity-100 transition-opacity"
+            aria-label="Scroll left"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+        )}
+
+        {/* Right Arrow */}
+        {canScrollRight && (
+          <button
+            onClick={() => scroll('right')}
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 rounded-full bg-background/90 border shadow-md flex items-center justify-center hover:bg-background opacity-0 group-hover:opacity-100 transition-opacity"
+            aria-label="Scroll right"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        )}
+
+        <div
+          ref={scrollContainerRef}
+          className="flex gap-2 overflow-x-auto pb-2 px-1 scrollbar-thin"
+        >
+          {products.map((p) => (
+            <div
+              key={p.id}
+              className="flex-shrink-0 w-48 rounded-lg border bg-card shadow-sm overflow-hidden"
+            >
+              {/* Product Image */}
+              <div className="aspect-square bg-muted flex items-center justify-center">
+                {p.image ? (
+                  <img
+                    src={p.image}
+                    alt={p.name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="text-muted-foreground text-xs">No image</span>
+                )}
+              </div>
+
+              {/* Product Info */}
+              <div className="p-3 space-y-2">
+                <div>
+                  <h4 className="font-semibold text-xs line-clamp-2">{p.name}</h4>
+                  <span className="inline-block mt-1 text-[10px] px-1.5 py-0.5 rounded-full border bg-muted">
+                    {p.category}
+                  </span>
+                </div>
+
+                {p.description && (
+                  <p className="text-[10px] text-muted-foreground line-clamp-2">
+                    {p.description}
+                  </p>
+                )}
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-bold">${p.price.toFixed(2)}</span>
+                  {p.stock !== undefined && (
+                    <span className="text-[10px] text-muted-foreground">
+                      {p.stock > 0 ? `${p.stock} left` : "Out of stock"}
+                    </span>
+                  )}
+                </div>
+
+                {/* Add to Cart Button */}
+                <button
+                  onClick={() => onAddToCart?.(p.id)}
+                  disabled={p.stock === 0 || !onAddToCart}
+                  className="w-full py-1.5 px-2 text-[10px] font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {p.stock === 0 ? "Out of Stock" : "Add to Cart"}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -267,20 +392,43 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
     await sendMessage({ text }, { body });
   };
 
+  const handleAddToCart = async (productId: string) => {
+    if (isLoading) return;
+    const text = `Add product ${productId} to my cart`;
+    const body: Record<string, unknown> = {
+      userId: user?.id,
+      userName: user?.name,
+      userEmail: user?.email,
+    };
+    if (!user?.id) {
+      body.guestCart = getGuestCart();
+    }
+    await sendMessage({ text }, { body });
+  };
+
   const interruptType: InterruptType | null = toolInterrupt
     ? classifyInterrupt(toolInterrupt)
     : null;
 
   return (
-    <div className="fixed bottom-24 right-6 z-50 w-96 h-[500px] rounded-lg border bg-background shadow-xl flex flex-col">
+    <div className="fixed bottom-24 right-6 z-50 w-[48rem] h-[650px] rounded-lg border bg-background shadow-xl flex flex-col">
       <div className="flex items-center justify-between p-4 border-b">
-        <h3 className="font-semibold">Shopping Assistant</h3>
-        <button
-          onClick={onClose}
-          className="text-muted-foreground hover:text-foreground"
-        >
-          <X className="h-4 w-4" />
-        </button>
+        <h3 className="font-semibold">Zero</h3>
+        <div className="flex items-center gap-3">
+          {/* Authentication Status */}
+          <div className="flex items-center gap-1.5">
+            <div className={`h-2 w-2 rounded-full ${user?.id ? 'bg-green-500' : 'bg-gray-400'}`} />
+            <span className="text-xs text-muted-foreground">
+              {user?.id ? user.name || 'Authenticated' : 'Guest'}
+            </span>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -289,59 +437,75 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
             Hi! How can I help you today?
           </p>
         )}
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex ${
-              msg.role === "user" ? "justify-end" : "justify-start"
-            }`}
-          >
+        {messages.map((msg) => {
+          return (
             <div
-              className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
-                msg.role === "user"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted"
+              key={msg.id}
+              className={`flex ${
+                msg.role === "user" ? "justify-end" : "justify-start"
               }`}
             >
-              {msg.parts.map((part, i) => {
-                if (part.type === "text") {
-                  return <TextWithLinks key={i} text={part.text} />;
-                }
-                const p = part as any;
-                // Show a waiting message while checkout_cart is executing (CIBA polling)
-                if (
-                  msg.role === "assistant" &&
-                  p.toolName === "checkout_cart" &&
-                  (p.state === "input-available" || p.state === "input-streaming")
-                ) {
-                  return (
-                    <div key={i} className="mt-1 text-xs space-y-1">
-                      <p className="font-medium">A push notification has been sent to your device.</p>
-                      <p className="text-muted-foreground">Please approve it to complete your purchase.</p>
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                        <span className="text-muted-foreground">Waiting for approval…</span>
+              <div
+                className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+                  msg.role === "user"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted"
+                }`}
+              >
+                {/* Render text parts first */}
+                {msg.parts.map((part, i) => {
+                  if (part.type === "text") {
+                    return <TextWithLinks key={`text-${i}`} text={part.text} />;
+                  }
+                  return null;
+                })}
+
+                {/* Then render tool results */}
+                {msg.parts.map((part, i) => {
+                  if (part.type === "text") return null;
+
+                  const p = part as any;
+                  // Extract tool name from type (e.g., "tool-show_products" -> "show_products")
+                  const toolName = p.type?.startsWith('tool-')
+                    ? p.type.substring(5)
+                    : p.toolName;
+
+                  // Show a waiting message while checkout_cart is executing (CIBA polling)
+                  if (
+                    msg.role === "assistant" &&
+                    toolName === "checkout_cart" &&
+                    (p.state === "input-available" || p.state === "input-streaming")
+                  ) {
+                    return (
+                      <div key={`tool-${i}`} className="mt-1 text-xs space-y-1">
+                        <p className="font-medium">A push notification has been sent to your device.</p>
+                        <p className="text-muted-foreground">Please approve it to complete your purchase.</p>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          <span className="text-muted-foreground">Waiting for approval…</span>
+                        </div>
                       </div>
-                    </div>
-                  );
-                }
-                // Render completed tool results inline
-                if (
-                  msg.role === "assistant" &&
-                  "toolName" in part &&
-                  "state" in part &&
-                  p.state === "output-available"
-                ) {
-                  return (
-                    <ToolResultDisplay
-                      key={i}
-                      toolName={p.toolName}
-                      output={p.output}
-                    />
-                  );
-                }
-                return null;
-              })}
+                    );
+                  }
+                  // Render completed tool results
+                  if (
+                    msg.role === "assistant" &&
+                    toolName &&
+                    "state" in part &&
+                    p.state === "output-available" &&
+                    p.output
+                  ) {
+                    return (
+                      <ToolResultDisplay
+                        key={`tool-${i}`}
+                        toolName={toolName}
+                        output={p.output}
+                        onAddToCart={handleAddToCart}
+                      />
+                    );
+                  }
+                  return null;
+                })}
               {msg.parts.every(
                 (p) =>
                   p.type !== "text" &&
@@ -357,7 +521,8 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
                 )}
             </div>
           </div>
-        ))}
+          );
+        })}
 
         {/* Auth0 AI interruption — CIBA (pending device approval) */}
         {toolInterrupt && interruptType === "ciba_pending" && (
