@@ -7,12 +7,38 @@ import { useChat } from "@ai-sdk/react";
 import { useInterruptions } from "@auth0/ai-vercel/react";
 import { useAuth } from "@/lib/auth/provider";
 import { getGuestCart, addGuestCartItem } from "@/lib/cart/guest-cart";
+import { mutate } from "swr";
 
 const CHAT_STORAGE_KEY = "retailzero-chat";
 
 function loadMessages(): UIMessage[] {
   try {
     const raw = localStorage.getItem(CHAT_STORAGE_KEY);
+    const backup = localStorage.getItem(CHAT_STORAGE_KEY + '_backup');
+
+    // If we have a backup, check if it's more recent or if main is empty
+    if (backup) {
+      const backupMessages = JSON.parse(backup);
+      if (!raw) {
+        // Main storage is empty, restore from backup
+        localStorage.setItem(CHAT_STORAGE_KEY, backup);
+        localStorage.removeItem(CHAT_STORAGE_KEY + '_backup');
+        return backupMessages;
+      }
+
+      const mainMessages = JSON.parse(raw);
+      // If backup has more messages, use it (likely saved during redirect)
+      if (backupMessages.length > mainMessages.length) {
+        localStorage.setItem(CHAT_STORAGE_KEY, backup);
+        localStorage.removeItem(CHAT_STORAGE_KEY + '_backup');
+        return backupMessages;
+      }
+
+      // Main is good, clean up backup
+      localStorage.removeItem(CHAT_STORAGE_KEY + '_backup');
+      return mainMessages;
+    }
+
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
@@ -31,30 +57,91 @@ export function clearChatHistory() {
   localStorage.removeItem(CHAT_STORAGE_KEY);
 }
 
-/** Render text with clickable links. Splits on URL patterns and wraps matches in <a> tags. */
+/** Render text with clickable links and markdown formatting. */
 function TextWithLinks({ text }: { text: string }) {
-  const splitRegex = /(https?:\/\/[^\s)]+|\/(?:api|connect)\/[^\s)]+)/g;
-  const testRegex = /^(?:https?:\/\/|\/(?:api|connect)\/)/;
-  const parts = text.split(splitRegex);
+  // First split by links
+  const linkSplitRegex = /(https?:\/\/[^\s)]+|\/(?:api|connect)\/[^\s)]+)/g;
+  const linkTestRegex = /^(?:https?:\/\/|\/(?:api|connect)\/)/;
+  const parts = text.split(linkSplitRegex);
+
   return (
     <>
-      {parts.map((part, i) =>
-        testRegex.test(part) ? (
-          <a
-            key={i}
-            href={part}
-            target={part.startsWith("/") ? "_self" : "_blank"}
-            rel="noopener noreferrer"
-            className="underline text-[#B49BFC] hover:text-[#c9b5fd]"
-          >
-            {part}
-          </a>
-        ) : (
-          <span key={i}>{part}</span>
-        )
-      )}
+      {parts.map((part, i) => {
+        // Handle links
+        if (linkTestRegex.test(part)) {
+          return (
+            <a
+              key={i}
+              href={part}
+              target={part.startsWith("/") ? "_self" : "_blank"}
+              rel="noopener noreferrer"
+              className="underline text-[#B49BFC] hover:text-[#c9b5fd]"
+            >
+              {part}
+            </a>
+          );
+        }
+
+        // Handle markdown formatting in non-link text
+        return <MarkdownText key={i} text={part} />;
+      })}
     </>
   );
+}
+
+/** Parse and render basic markdown formatting (bold, italic, code). */
+function MarkdownText({ text }: { text: string }) {
+  const elements: React.ReactNode[] = [];
+  let remaining = text;
+  let key = 0;
+
+  while (remaining.length > 0) {
+    // Match bold (**text** or __text__)
+    const boldMatch = remaining.match(/^(\*\*|__)(.*?)\1/);
+    if (boldMatch) {
+      elements.push(<strong key={key++}>{boldMatch[2]}</strong>);
+      remaining = remaining.slice(boldMatch[0].length);
+      continue;
+    }
+
+    // Match italic (*text* or _text_)
+    const italicMatch = remaining.match(/^(\*|_)(.*?)\1/);
+    if (italicMatch) {
+      elements.push(<em key={key++}>{italicMatch[2]}</em>);
+      remaining = remaining.slice(italicMatch[0].length);
+      continue;
+    }
+
+    // Match inline code (`text`)
+    const codeMatch = remaining.match(/^`(.*?)`/);
+    if (codeMatch) {
+      elements.push(
+        <code key={key++} className="px-1 py-0.5 bg-muted rounded text-xs font-mono">
+          {codeMatch[1]}
+        </code>
+      );
+      remaining = remaining.slice(codeMatch[0].length);
+      continue;
+    }
+
+    // No match, consume one character
+    const nextSpecial = remaining.search(/[\*_`]/);
+    if (nextSpecial === -1) {
+      // No more special characters, add the rest
+      elements.push(<span key={key++}>{remaining}</span>);
+      break;
+    } else if (nextSpecial > 0) {
+      // Add text before the next special character
+      elements.push(<span key={key++}>{remaining.slice(0, nextSpecial)}</span>);
+      remaining = remaining.slice(nextSpecial);
+    } else {
+      // Special character but no match, consume it as plain text
+      elements.push(<span key={key++}>{remaining[0]}</span>);
+      remaining = remaining.slice(1);
+    }
+  }
+
+  return <>{elements}</>;
 }
 
 // ---------------------------------------------------------------------------
@@ -280,6 +367,71 @@ function ToolResultDisplay({
     );
   }
 
+  if (toolName === "redirect_to_login" || toolName === "redirect_to_google_connect") {
+    const [popupOpened, setPopupOpened] = useState(false);
+
+    useEffect(() => {
+      if (output.redirect && output.url && !popupOpened) {
+        setPopupOpened(true);
+
+        // Open in popup if specified
+        if (output.popup) {
+          const width = 600;
+          const height = 700;
+          const left = window.screen.width / 2 - width / 2;
+          const top = window.screen.height / 2 - height / 2;
+          const popup = window.open(
+            output.url,
+            'google-oauth',
+            `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+          );
+
+          if (popup) {
+            // Listen for OAuth completion message from popup
+            const handleMessage = (event: MessageEvent) => {
+              if (event.data?.type === 'oauth-success') {
+                popup.close();
+                window.removeEventListener('message', handleMessage);
+
+                // Refresh auth state without page reload
+                // This triggers SWR to re-fetch user data
+                mutate('/api/auth/me');
+
+                // Dispatch event to notify other components
+                window.dispatchEvent(new Event('auth-updated'));
+              }
+            };
+            window.addEventListener('message', handleMessage);
+
+            // Check if popup was closed manually
+            const checkClosed = setInterval(() => {
+              if (popup.closed) {
+                clearInterval(checkClosed);
+                window.removeEventListener('message', handleMessage);
+              }
+            }, 500);
+          } else {
+            // Popup blocked, fall back to redirect
+            setTimeout(() => {
+              window.location.href = output.url;
+            }, 1000);
+          }
+        } else {
+          // Full page redirect
+          setTimeout(() => {
+            window.location.href = output.url;
+          }, 1000);
+        }
+      }
+    }, [output, popupOpened]);
+
+    return (
+      <div className="mt-1 text-xs">
+        <p className="text-muted-foreground">{output.message || "Redirecting..."}</p>
+      </div>
+    );
+  }
+
   if (toolName === "get_product_details") {
     return (
       <div className="mt-1 text-xs">
@@ -338,6 +490,34 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
       saveMessages(messages);
     }
   }, [messages, status]);
+
+  // Force-save messages when redirect tools are detected (even if streaming)
+  useEffect(() => {
+    for (const msg of messages) {
+      if (msg.role !== "assistant") continue;
+      for (const part of msg.parts) {
+        const p = part as any;
+        if (!("toolName" in p)) continue;
+        const toolName: string = p.toolName ?? "";
+
+        // If a redirect tool is called, immediately save messages
+        if (
+          toolName === "redirect_to_login" ||
+          toolName === "redirect_to_google_connect"
+        ) {
+          if (p.state === "output-available" && p.output?.redirect) {
+            saveMessages(messages);
+            // Also create a backup
+            try {
+              localStorage.setItem(CHAT_STORAGE_KEY + '_backup', JSON.stringify(messages));
+            } catch {
+              // storage full or unavailable
+            }
+          }
+        }
+      }
+    }
+  }, [messages]);
 
   // Sync tool results: when a cart-modifying tool call completes, update the UI.
   // For guests: write to localStorage. For all users: dispatch cart-updated
@@ -412,7 +592,7 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed bottom-24 right-6 z-50 w-[48rem] h-[650px] rounded-lg border bg-background shadow-xl flex flex-col">
-      <div className="flex items-center justify-between p-4 border-b">
+      <div className="flex items-center justify-between px-6 py-5 border-b">
         <h3 className="font-semibold">Zero</h3>
         <div className="flex items-center gap-3">
           {/* Authentication Status */}
@@ -431,7 +611,7 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
         {messages.length === 0 && (
           <p className="text-sm text-muted-foreground text-center mt-8">
             Hi! How can I help you today?
@@ -446,7 +626,7 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
               }`}
             >
               <div
-                className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+                className={`max-w-[80%] rounded-lg px-4 py-3 text-sm ${
                   msg.role === "user"
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted"
@@ -626,20 +806,20 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="p-4 border-t">
-        <form onSubmit={handleSubmit} className="flex gap-2">
+      <div className="px-6 py-5 border-t">
+        <form onSubmit={handleSubmit} className="flex gap-3">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask me anything..."
-            className="flex-1 h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="flex-1 h-12 rounded-md border border-input bg-background px-4 py-3 text-sm"
             disabled={isLoading}
           />
           <button
             type="submit"
             disabled={isLoading || !input.trim()}
-            className="h-10 w-10 rounded-md bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 disabled:opacity-50"
+            className="h-12 w-12 rounded-md bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 disabled:opacity-50"
           >
             <Send className="h-4 w-4" />
           </button>

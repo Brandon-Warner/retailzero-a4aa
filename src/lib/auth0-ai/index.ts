@@ -281,6 +281,41 @@ const viewProfileTool = tool({
   },
 });
 
+const redirectToLoginTool = tool({
+  description:
+    "Redirect the user to the login page. Use this when a guest user asks to log in, sign in, or authenticate. " +
+    "This will redirect them to the login page and return them back to the store after authentication.",
+  inputSchema: z.object({
+    returnTo: z
+      .string()
+      .optional()
+      .default("/")
+      .describe("The page to return to after login (defaults to home)"),
+  }),
+  execute: async ({ returnTo }: { returnTo: string }) => {
+    return {
+      redirect: true,
+      url: `/auth/login?returnTo=${encodeURIComponent(returnTo)}`,
+      message: "Redirecting to login page...",
+    };
+  },
+});
+
+const redirectToGoogleConnectTool = tool({
+  description:
+    "Redirect the user to connect their Google account. Use this when Token Vault authorization is required for Google Calendar features. " +
+    "Opens Google OAuth in a popup window to maintain chat context. After connecting, the conversation continues seamlessly.",
+  inputSchema: z.object({}),
+  execute: async () => {
+    return {
+      redirect: true,
+      popup: true,
+      url: "/connect/google",
+      message: "Opening Google authorization...",
+    };
+  },
+});
+
 const searchOrdersTool = tool({
   description:
     "Search the current user's order history. Returns past orders filtered by fine-grained authorization. " +
@@ -553,6 +588,8 @@ export function getRetailTools() {
     prepare_checkout: prepareCheckoutTool,
     view_profile: viewProfileTool,
     search_orders: searchOrdersTool,
+    redirect_to_login: redirectToLoginTool,
+    redirect_to_google_connect: redirectToGoogleConnectTool,
   };
 
   try {

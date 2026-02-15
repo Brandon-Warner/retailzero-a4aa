@@ -85,7 +85,8 @@ export async function POST(request: Request) {
             (userId && userId !== "guest"
               ? `The user is logged in as ${userName || "a registered user"}${userEmail ? ` (${userEmail})` : ""}. ` +
                 "They are authenticated and can checkout, edit their profile, and use all features. "
-              : "The user is a guest (not logged in). They can browse products and manage a cart, but must log in to checkout. ") +
+              : "The user is a guest (not logged in). They can browse products and manage a cart, but must log in to checkout. " +
+                "If a guest asks to log in, sign in, or authenticate, use the redirect_to_login tool to redirect them to the login page. ") +
             "When calling tools that accept a userId parameter, always pass the current user ID — never ask the user for their ID. " +
             "CRITICAL: When a user asks to see products, add to cart, or any action that requires a tool — call the tool IMMEDIATELY. " +
             "Do NOT generate text first saying you will look something up. Do NOT say 'Let me check' or 'I'll look that up' without calling the tool in the same response. " +
@@ -102,12 +103,14 @@ export async function POST(request: Request) {
             "Do NOT mention the push notification or approval again at that point — the order is already complete. " +
             "Profile edits are only allowed for the user's own profile — attempting to edit another user's profile will be denied. " +
             "You can also set Google Calendar reminders for upcoming product drops or restocks. " +
-            "If the set_calendar_reminder tool fails with an authorization or Token Vault error, " +
-            `tell the user they need to connect their Google account first by clicking this link: ${process.env.APP_BASE_URL}/connect/google ` +
-            "Once they authorize and return, they can ask you to set the reminder again. " +
+            "If the set_calendar_reminder tool fails with an authorization or Token Vault error, use the redirect_to_google_connect tool to redirect them to connect their Google account. " +
             "You can search the user's order history using the search_orders tool. " +
             "Use it to answer questions about past purchases, order totals, items bought, or any order-related queries. " +
-            "The search_orders tool uses fine-grained authorization to ensure only the current user's orders are returned.",
+            "The search_orders tool uses fine-grained authorization to ensure only the current user's orders are returned. " +
+            "REDIRECT TOOLS: " +
+            "When a guest user explicitly asks to log in, sign in, create an account, or authenticate, use the redirect_to_login tool. " +
+            "When you encounter a Token Vault authorization error for calendar features, use the redirect_to_google_connect tool to send them to connect their Google account. " +
+            "Do NOT provide links for users to click manually — always use the redirect tools to automatically send them to the right page.",
           messages: await convertToModelMessages(messages),
           tools,
           stopWhen: stepCountIs(5),
