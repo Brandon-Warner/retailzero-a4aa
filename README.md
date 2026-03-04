@@ -17,6 +17,19 @@
 	- MyAccount API
 	- MRRT for MyAccount API
 
+# FGA Model Schema
+```
+model
+  schema 1.1
+
+type user
+
+type order
+  relations
+    define owner: [user]
+    define viewer: [user] or owner
+```
+
 # Env
 ```
 AUTH0_SECRET=
