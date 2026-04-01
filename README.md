@@ -15,11 +15,25 @@
 - Navigate to the calendar settings and scroll down, copy the calendar ID. We will need this for the env variables.
 
 # Auth0 Config
-1. Make sure to enable:
+
+## Regular Web Application
+1. In the Auth0 Dashboard, create a new **Regular Web Application**.
+2. Under **Settings**, set the following URLs (adjust the base URL if not running locally):
+	- **Allowed Callback URLs:** `http://localhost:3000/auth/callback`
+	- **Allowed Logout URLs:** `http://localhost:3000`
+3. Copy the **Domain**, **Client ID**, and **Client Secret** into `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, and `AUTH0_CLIENT_SECRET` in your `.env.local`.
+4. Enable the following on this application:
 	- CIBA (App Grant Type)
 	- Token Vault (Google Social + App Grant Type)
 	- MyAccount API
 	- MRRT for MyAccount API
+
+## Management API Application (Machine-to-Machine)
+1. Create a separate **Machine-to-Machine** application for Management API access.
+2. Authorize it against the **Auth0 Management API** (`https://<your-tenant>/api/v2/`).
+3. Grant it the scopes needed for dynamic client registration and client grants (e.g. `create:clients`, `create:client_grants`).
+4. Copy the **Domain**, **Client ID**, and **Client Secret** into `AUTH0_MGMT_DOMAIN`, `AUTH0_MGMT_CLIENT_ID`, and `AUTH0_MGMT_CLIENT_SECRET` in your `.env.local`.
+	- Note: `AUTH0_MGMT_DOMAIN` should be the canonical tenant domain (e.g. `tenant.us.auth0.com`), which may differ from `AUTH0_DOMAIN` if you use a custom domain.
 
 # FGA Model Schema
 ```
