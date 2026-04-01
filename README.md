@@ -34,6 +34,16 @@ type order
     define viewer: [user] or owner
 ```
 
+# LiteLLM API Key
+This app routes Anthropic requests through a LiteLLM proxy. You need to obtain an API key from the team's LiteLLM instance.
+
+1. Navigate to the LiteLLM admin UI (ask your team lead for the URL).
+2. Go to **Virtual Keys** and click **+ Generate New Key**.
+3. Give the key a descriptive name (e.g. `retail-a4aa-local`).
+4. Under model access, ensure **claude-4-6-opus** is enabled -- the app hardcodes this model. Set budget limits as desired, then click **Generate**.
+5. Copy the generated key (starts with `sk-...`) and use it as `ANTHROPIC_API_KEY` in your `.env.local`.
+6. Set `ANTHROPIC_BASE_URL` to the LiteLLM proxy base URL (without the trailing `/v1` -- the app appends it automatically).
+
 # Env
 ```
 AUTH0_SECRET=
@@ -57,4 +67,4 @@ FGA_API_TOKEN_ISSUER=
 FGA_API_AUDIENCE=
 
 GOOGLE_CALENDAR_ID=
-``` 
+```
