@@ -45,6 +45,7 @@ This app routes Anthropic requests through a LiteLLM proxy. You need to obtain a
 6. Set `ANTHROPIC_BASE_URL` to the LiteLLM proxy base URL (without the trailing `/v1` -- the app appends it automatically).
 
 # Env
+Create a `.env.local` file in the project root with the following variables:
 ```
 AUTH0_SECRET=
 AUTH0_DOMAIN=
