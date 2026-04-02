@@ -1,3 +1,61 @@
+# RetailZero
+
+RetailZero is a modern e-commerce storefront that demonstrates **Auth0 for AI Agents (A4AA)** — the set of Auth0 capabilities that let AI agents act securely on behalf of users. Built with Next.js 15, React 19, and the Vercel AI SDK, the app features an AI shopping assistant ("Zero") powered by Claude that can browse products, manage carts, process checkouts, edit user profiles, search order history, and set Google Calendar reminders — all while enforcing identity, consent, and authorization through Auth0.
+
+The application serves as a reference implementation showing how to integrate Auth0's AI-agent primitives (`@auth0/ai`, `@auth0/ai-vercel`) into a real-world agentic workflow where an LLM calls tools that access protected resources and third-party APIs on behalf of authenticated users.
+
+### Tech Stack
+
+- **Framework:** Next.js 15 (App Router)
+- **UI:** React 19, Tailwind CSS, Radix UI, Lucide icons
+- **AI:** Vercel AI SDK v6, Anthropic Claude (via `@ai-sdk/anthropic`)
+- **Auth:** Auth0 (`@auth0/nextjs-auth0`), Auth0 AI (`@auth0/ai`, `@auth0/ai-vercel`)
+- **Authorization:** Auth0 Fine-Grained Authorization (FGA) via OpenFGA
+- **Third-party integration:** Google Calendar API (via Token Vault)
+
+---
+
+# Auth0 for AI Agents — Use Cases
+
+This application demonstrates four core A4AA capabilities that solve the key challenges of letting AI agents act on behalf of users:
+
+## 1. Client-Initiated Backchannel Authentication (CIBA) — Async User Consent
+
+**Problem:** When an AI agent performs a high-stakes action (e.g. placing an order), the user should explicitly approve it — but the agent is running server-side without direct access to the user's browser session.
+
+**Solution:** The `checkout_cart` tool is wrapped with `auth0AI.withAsyncAuthorization()`. When the agent processes a checkout, Auth0 sends a push notification to the user's device asking them to approve the purchase. The server polls Auth0 until the user approves (or the request times out), keeping the AI stream open. The order is only placed after the user explicitly consents on their device.
+
+**Where:** `src/lib/auth0-ai/ciba.ts`, `src/lib/auth0-ai/index.ts` (checkout_cart tool)
+
+## 2. Fine-Grained Authorization (FGA) — Scoped Resource Access
+
+**Problem:** The AI agent can call tools that modify user data (e.g. editing a profile) or query sensitive data (e.g. order history). It must only be allowed to access resources the current user is authorized for — not other users' data.
+
+**Solution:** Two FGA patterns are demonstrated:
+
+- **Tool-level guards:** The `edit_profile` tool is wrapped with `fgaAI.withFGA()`, which checks an FGA relationship (`user:{id}` → `editor` → `profile:{id}`) before the tool executes. Unauthorized edits are rejected before any data is touched.
+- **Retrieval-level filtering (RAG):** The `search_orders` tool uses `FGAFilter` to filter order documents after retrieval. Even though all orders exist in the simulated document store, only orders where the requesting user has a `viewer` relationship are returned. This implements authorized RAG — ensuring AI-generated responses only contain data the user is permitted to see.
+
+**Where:** `src/lib/auth0-ai/fga.ts`, `src/lib/fga/order-store.ts`, `src/lib/auth0-ai/index.ts` (edit_profile, search_orders tools)
+
+## 3. Token Vault — Third-Party API Access
+
+**Problem:** The AI agent needs to call external APIs (Google Calendar) on behalf of the user, which requires valid OAuth tokens for that third-party service. Managing token exchange, refresh, and storage is complex.
+
+**Solution:** The `set_calendar_reminder` tool is wrapped with `auth0AI.withTokenVault()`. Token Vault manages the full lifecycle of the user's Google OAuth tokens — storing them securely, refreshing them when expired, and injecting a valid access token into the tool at execution time. If the user hasn't connected their Google account yet, the tool fails gracefully and the agent redirects them to the Google Connect flow (using Auth0 Connected Accounts / My Account API).
+
+**Where:** `src/lib/auth0-ai/calendar.ts`, `src/lib/auth0-ai/index.ts` (set_calendar_reminder tool), `src/app/api/auth/connect/google/route.ts`
+
+## 4. User Metadata as Persistent Storage (Management API)
+
+**Problem:** The AI agent needs to read and write user-specific data (cart contents, order history) that persists across sessions, without requiring a separate database.
+
+**Solution:** Auth0 `user_metadata` is used as the persistent store for each user's cart and order history. On first access, data is hydrated from the Management API into an in-memory cache. Writes update the cache immediately and persist back to `user_metadata` in the background via fire-and-forget PATCH calls. This gives the AI agent a simple, per-user data layer backed by the identity provider.
+
+**Where:** `src/lib/auth0/user-cache.ts`, `src/lib/auth0/metadata.ts`
+
+---
+
 # Setup
 1. ```npm i && npm build```
 2. ```openssl rand -hex 32``` >> ***AUTH0_SECRET***
