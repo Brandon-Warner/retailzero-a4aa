@@ -117,6 +117,36 @@ src/
 
 ---
 
+# Data Sources
+
+RetailZero uses flat JSON files as its data layer. No database setup is required.
+
+```
+data/
+├── products.json   # Product catalog (16 items across 4 categories)
+├── users.json      # Seed user profiles with addresses and preferences
+└── carts.json      # Cart state keyed by userId
+
+src/lib/data/
+├── products.ts     # getProducts(), getProductById(), searchProducts()
+├── users.ts        # getUser(), getUserByEmail(), createUser(), updateUser()
+└── carts.ts        # getCart(), addToCart(), removeFromCart(), clearCart(), checkout()
+```
+
+### Products (`data/products.json`)
+
+16 products across 4 categories: Electronics, Clothing, Home, and Sports. Each product includes `id`, `name`, `description`, `price`, `image`, `category`, `stock`, and `rating`.
+
+### Users (`data/users.json`)
+
+Seed user profiles with address (street, city, state, zip) and preferences (newsletter, theme). Cart and order data for authenticated users is stored in Auth0 `user_metadata` via the Management API, not in this file.
+
+### Carts (`data/carts.json`)
+
+Cart state keyed by `userId`. Each cart contains an `items` array (`productId`, `quantity`, `addedAt`) and an `updatedAt` timestamp. Guest carts are managed client-side via localStorage and synced to the server per request.
+
+---
+
 # Setup
 
 ## Prerequisites
