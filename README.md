@@ -434,6 +434,8 @@ node scripts/setup-auth0.mjs
 
 The script will prompt you for credentials, create all Auth0 resources via the Management API, deploy the FGA authorization model, and generate a `.env.local` file. Note that some features (Token Vault, My Account API, MRRT, CIBA tenant toggle) still require manual enablement in the Auth0 Dashboard as described in step 4.
 
+> **Disclaimer:** This script has not been fully tested yet. Use the manual setup steps above as the source of truth. If you run into issues with the script, fall back to the manual configuration in step 4.
+
 ## 10. Run the App
 
 ```bash
