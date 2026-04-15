@@ -121,7 +121,7 @@ src/
 
 ## Prerequisites
 
-- Node.js 20.x (add `20` to `.nvmrc`)
+- Node.js 20.x. We recommend using [nvm](https://github.com/nvm-sh/nvm) (Node Version Manager) to manage Node.js versions. After installing nvm, add `20` to a `.nvmrc` file in the project root and run `nvm use` to automatically switch to the correct version.
 - An Auth0 tenant with access to A4AA features (CIBA, Token Vault, My Account API)
 - A Google Cloud project with the Calendar API enabled
 - An FGA store (via [fga.dev](https://fga.dev))
