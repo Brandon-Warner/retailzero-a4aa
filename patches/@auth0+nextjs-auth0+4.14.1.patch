@@ -1,0 +1,13 @@
+diff --git a/node_modules/@auth0/nextjs-auth0/dist/server/fetcher.js b/node_modules/@auth0/nextjs-auth0/dist/server/fetcher.js
+index 5b9878a..ac60e53 100644
+--- a/node_modules/@auth0/nextjs-auth0/dist/server/fetcher.js
++++ b/node_modules/@auth0/nextjs-auth0/dist/server/fetcher.js
+@@ -161,7 +161,7 @@ export class Fetcher {
+             const response = await protectedResourceRequest(accessToken, request.method, new URL(request.url), request.headers, request.body, {
+                 ...this.config.httpOptions(),
+                 [customFetch]: (url, options) => {
+-                    return this.config.fetch(url, options);
++                    return this.config.fetch(url, { ...options, duplex: "half" });
+                 },
+                 [allowInsecureRequests]: this.config.allowInsecureRequests || false,
+                 ...(useDpop && { DPoP: this.config.dpopHandle })
